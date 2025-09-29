@@ -10,12 +10,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # CONFIGURACIÓN DE BCRYPT
 pwd_context = CryptContext(
-    schemes = ["bcrypt"],
+    schemes = ["argon2"],
     deprecated = "auto"
 )
 
 ## FUNCION PARA CONVERTIR CONTRASEÑA EN HASH bcrypt
-def hashed_password(password : str) -> str:
+def hash_password(password : str) -> str:
     return pwd_context.hash(password)
 
 ## COMPARA CONTRASEÑA INGRESADA CON LA GUARDADA 
@@ -25,7 +25,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 ## GENERA UN JWT CON EXPIRACIÓN 
 def create_access_tokken(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
-    expire = datatime.utcnow() + (expires_delta or timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp" : expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm = ALGORITHM)
 
