@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, field_validator
 from sqlmodel import SQLModel, Field, Relationship, Session
+from datetime import datetime, timedelta
 from typing import Optional
 from enum import Enum
 
@@ -8,13 +9,26 @@ from enum import Enum
 ## hashed_password
 
 
-class UserBase(SQLModel):
+class User(SQLModel, table = True):
+    id : int | None = Field(default = None, primary_key = True)
     username : str = Field(default = None)
     email : EmailStr = Field(default = None)
-    hashed_password : str = Field(default = None)
+    hashed_password : str
+    created_at : datetime = Field(default_factory=datetime.utcnow)
 
-class UserCreate(UserBase):
-    pass
+class UserCreate(SQLModel):
+    username : str
+    email : EmailStr
+    password : str
 
-class User(UserBase, table = True):
-    id : int | None = Field(default = None, primary_key = True)
+class UserLogin(SQLModel):
+    username : str
+    password : str
+
+class UserResponse(SQLModel):
+    id: int
+    username: str
+    email: EmailStr
+
+class Config:
+    orm_mode = True

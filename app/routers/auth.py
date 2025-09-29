@@ -1,25 +1,37 @@
-import uvicorn
-from sqlmodel import select, update
-from fastapi import APIRouter, FastAPI, HTTPException, status, Query
-from models import UserBase, UserCreate, User
-from db import SessionDep
+from datetime import datetime, timedelta 
+from jose import JWTError, jwt 
+from passlib.context import CryptContext
 
-router = APIRouter()
+SECRET_KEY = "secret_key_auth"
 
+ALGORITHM = "HS256"
 
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-@router.post("/user", response_model = User, tags = ["Users"])
-async def userCreate(user_data : UserCreate, session : SessionDep):
-    user = User.model_validate(user_data.model_dump())
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    return user
+# CONFIGURACIÓN DE BCRYPT
+pwd_context = CryptContext(
+    schemes = ["bcrypt"],
+    deprecated = "auto"
+)
 
+## FUNCION PARA CONVERTIR CONTRASEÑA EN HASH bcrypt
+def hashed_password(password : str) -> str:
+    return pwd_context.hash(password)
 
-@router.get("/user", response_model = list[User], tags = ["Users"])
-async def userList(session : SessionDep):
-    statament = select(User)
-    result = session.exec(statament)
-    user = result.all()
-    return user
+## COMPARA CONTRASEÑA INGRESADA CON LA GUARDADA 
+def verify_password(password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(password, hashed_password)
+
+## GENERA UN JWT CON EXPIRACIÓN 
+def create_access_tokken(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    expire = datatime.utcnow() + (expires_delta or timedelta(minutes = ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp" : expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm = ALGORITHM)
+
+## VALIDA Y OBTIENE INFO DE JWT
+def decode_access_token(token : str):
+    try: 
+        return jwt.decode(token, SECRET_KEY, algorithm=[ALGORITHM])
+    except JWTError:
+        return None
